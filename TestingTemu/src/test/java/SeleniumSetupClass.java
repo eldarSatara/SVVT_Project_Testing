@@ -29,5 +29,4 @@ public class SeleniumSetupClass {
             webDriver.quit();
         }
     }
-
 }
