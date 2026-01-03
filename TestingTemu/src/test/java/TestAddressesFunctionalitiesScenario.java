@@ -12,26 +12,27 @@ import org.openqa.selenium.chrome.ChromeOptions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TestAddressesFunctionalitiesScenario  {
 
-    private static WebDriver driver;
+private static WebDriver driver;
     private static JavascriptExecutor js;
     private static Random random = new Random();
 
-    // Data Storage to be used across test methods
+    // Data Storage for Validation
     private static String currentFirstName;
     private static String currentLastName;
     private static String currentPhone;
     private static String currentStreet;
+    
+    // To store the old name before editing, for validation purposes
+    private static String oldFullName; 
 
     @BeforeAll
     public static void setUp() {
-        // Driver Path Setup
         System.setProperty("webdriver.chrome.driver", "D:\\chromedriver-win64\\chromedriver.exe");
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--start-maximized");
         options.addArguments("--disable-blink-features=AutomationControlled");
-        // User Agent to simulate real browser
         options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36");
 
         driver = new ChromeDriver(options);
@@ -39,7 +40,7 @@ public class TestAddressesFunctionalitiesScenario  {
         js = (JavascriptExecutor) driver;
     }
 
-    // --- HELPER: GENERATE RANDOM BOSNIAN DATA ---
+    // --- HELPER: GENERATE RANDOM DATA ---
     private void generateNewBosnianData() {
         String[] firstNames = {"Adnan", "Tarik", "Lejla", "Amra", "Haris", "Mirza", "Elma", "Dzenan"};
         String[] lastNames = {"Hodzic", "Kovacevic", "Delic", "Hadziabdic", "Imamovic", "Suljic"};
@@ -48,13 +49,9 @@ public class TestAddressesFunctionalitiesScenario  {
         currentFirstName = firstNames[random.nextInt(firstNames.length)];
         currentLastName = lastNames[random.nextInt(lastNames.length)];
         currentStreet = streets[random.nextInt(streets.length)] + " " + (random.nextInt(100) + 1);
-
-        // Phone: Start with 6, total 8-9 digits (e.g., 61xxxxxx)
-        // Here we generate '6' + 7 random digits = 8 digits total
         currentPhone = "6" + (1000000 + random.nextInt(9000000));
     }
 
-    // Helper for random small delays
     private void randomDelay() {
         try {
             int delay = 2000 + random.nextInt(2000);
@@ -63,188 +60,178 @@ public class TestAddressesFunctionalitiesScenario  {
     }
 
     // ---------------------------------------------------------
-    // STEP 1 - 13: Add New Address
+    // STEP 1: Add New Address & VALIDATE
     // ---------------------------------------------------------
     @Test
     @Order(1)
-    @DisplayName("Step 1-13: Add New Address (Bosnia Data)")
+    @DisplayName("Step 1: Add Address & Verify Name")
     public void test01_AddNewAddress() {
         System.out.println("=== TEST 1: Add New Address ===");
-        generateNewBosnianData(); // Generate new random data
-        System.out.println("Generated Data: " + currentFirstName + " " + currentLastName + ", Phone: " + currentPhone);
+        generateNewBosnianData(); 
+        System.out.println("Input Data: " + currentFirstName + " " + currentLastName);
 
         try {
-            // 1. Visit Temu
+            // Navigation
             driver.get("https://www.temu.com/");
             randomDelay();
-
-            // 2. Go to orders and Account (Class: _1MI18fma _2eKJ81QH _2PffkKmv)
-            // Using CSS Selector (replacing spaces with dots)
             driver.findElement(By.cssSelector("._1MI18fma._2eKJ81QH._2PffkKmv")).click();
-            System.out.println("Clicked Account Icon.");
             randomDelay();
-
-            // 3. Go to Address section (XPath provided)
             driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[1]/ul/li[8]")).click();
-            System.out.println("Clicked Address Section.");
             Thread.sleep(2000);
 
-            // 4. Press 'Add new address' (XPath provided)
+            // Add New Button
             try {
                 driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div/div[1]/div[2]/span")).click();
-                System.out.println("Clicked 'Add New Address'.");
             } catch (Exception e) {
-                System.out.println("Add New Address button not found or form already open.");
+                System.out.println("Form might be already open.");
             }
+            Thread.sleep(2000);
 
-            // 5. Wait 3 seconds
-            System.out.println("Waiting 3 seconds...");
-            Thread.sleep(3000);
-
-            // 6. Input First Name
-            WebElement fname = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div[1]/div/div[2]/div/div[1]/div/div/div[2]/div/div[1]/input"));
-            fname.sendKeys(currentFirstName);
-
-            // 7. Input Last Name
-            WebElement lname = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div[1]/div/div[2]/div/div[2]/div/div/div[2]/div/div[1]/input"));
-            lname.sendKeys(currentLastName);
-
-            // 8. Input Phone Number
-            WebElement phone = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div[1]/div/div[3]/div/div/div/div[2]/div[2]/div[1]/input"));
-            phone.sendKeys(currentPhone);
-
-            // 9. Input Street and House Number
-            WebElement street = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div[1]/div/div[4]/div/div/div[2]/div/div/div/div/div[3]/input"));
-            street.sendKeys(currentStreet);
-            System.out.println("Form inputs filled.");
+            // Fill Form
+            driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div[1]/div/div[2]/div/div[1]/div/div/div[2]/div/div[1]/input")).sendKeys(currentFirstName);
+            driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div[1]/div/div[2]/div/div[2]/div/div/div[2]/div/div[1]/input")).sendKeys(currentLastName);
+            driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div[1]/div/div[3]/div/div/div/div[2]/div[2]/div[1]/input")).sendKeys(currentPhone);
+            driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div[1]/div/div[4]/div/div/div[2]/div/div/div/div/div[3]/input")).sendKeys(currentStreet);
+            
+            // Dropdown City & Search
             Thread.sleep(1000);
-
-            // 10. Click dropdown for selecting city and postal code
             driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div[1]/div/div[7]/div/div/div[2]/div/div[2]/div/div/div/div/div/div")).click();
             Thread.sleep(1000);
-
-            // 11. Search for 'Ilidza'
-            WebElement searchInput = driver.findElement(By.xpath("/html/body/div[4]/div/div[1]/input"));
-            searchInput.sendKeys("Ilidza");
-            Thread.sleep(1500); // Wait for search results
-
-            // 12. Click/Select result
+            driver.findElement(By.xpath("/html/body/div[4]/div/div[1]/input")).sendKeys("Ilidza");
+            Thread.sleep(1500); 
             driver.findElement(By.xpath("/html/body/div[4]/div/div[2]/div[1]/div/div")).click();
-            System.out.println("City Selected: Ilidza.");
             Thread.sleep(1000);
 
-            // 13. Click Save
+            // Click Save
             driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[3]/div[2]")).click();
-            System.out.println("Saved New Address.");
+            System.out.println("Clicked Save.");
+            
+            // Wait for list update
+            Thread.sleep(4000);
+
+            // === ASSERTION: Check if the new address card contains the name ===
+            // XPath provided: /html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div[2]/div[1]/div/div[1]/bdi
+            WebElement nameOnCardEl = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div[2]/div[1]/div/div[1]/bdi"));
+            String actualNameOnCard = nameOnCardEl.getText();
+            System.out.println("Actual Name on Card: " + actualNameOnCard);
+
+            String expectedFullName = currentFirstName + " " + currentLastName;
+            
+            // Verify equality (contains or equalsIgnoreCase)
+            Assertions.assertTrue(actualNameOnCard.toLowerCase().contains(expectedFullName.toLowerCase()), 
+                "FAILED: The saved name on screen does not match the input!");
+            
+            System.out.println("Assertion Passed: Address added successfully.");
 
         } catch (Exception e) {
-            Assertions.fail("Failed in Add Address Step: " + e.getMessage());
+            Assertions.fail("Add Address Failed: " + e.getMessage());
         }
     }
 
     // ---------------------------------------------------------
-    // STEP 14 - 20: Edit Address
+    // STEP 2: Edit Address & VALIDATE
     // ---------------------------------------------------------
     @Test
     @Order(2)
-    @DisplayName("Step 14-20: Edit First Address")
+    @DisplayName("Step 2: Edit Address & Verify Changes")
     public void test02_EditAddress() {
         System.out.println("=== TEST 2: Edit Address ===");
-        generateNewBosnianData(); // Generate new data for editing
-        System.out.println("New Data for Edit: " + currentFirstName + " " + currentLastName);
+        
+        // 1. Save Old Name for validation later
+        oldFullName = currentFirstName + " " + currentLastName;
+        System.out.println("Old Name: " + oldFullName);
+
+        // 2. Generate New Data
+        generateNewBosnianData();
+        String newFullName = currentFirstName + " " + currentLastName;
+        System.out.println("New Input Name: " + newFullName);
 
         try {
-            // 14. Wait 4 seconds
-            System.out.println("Waiting 4 seconds...");
-            Thread.sleep(4000);
-
-            // 15. Select 'Edit' for the first address
+            // Click Edit (First Address)
             driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div[1]/div[2]/div[2]/div[3]")).click();
-            System.out.println("Clicked Edit.");
-
-            // 16. Wait 4 seconds
-            System.out.println("Waiting 4 seconds (loading form)...");
             Thread.sleep(4000);
 
-            // 17. Change First Name (Clear and Type)
+            // Edit First Name
             WebElement fname = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div/div[2]/div[3]/div/div[1]/div/div[2]/div/div[1]/div/div/div[2]/div/input"));
-            fname.sendKeys(Keys.CONTROL + "a"); // Select All
-            fname.sendKeys(Keys.DELETE);        // Delete
+            fname.sendKeys(Keys.CONTROL + "a");
+            fname.sendKeys(Keys.DELETE);
             fname.sendKeys(currentFirstName);
 
-            // 18. Change Last Name (Clear and Type)
+            // Edit Last Name
             WebElement lname = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div/div[2]/div[3]/div/div[1]/div/div[2]/div/div[2]/div/div/div[2]/div/input"));
             lname.sendKeys(Keys.CONTROL + "a");
             lname.sendKeys(Keys.DELETE);
             lname.sendKeys(currentLastName);
 
-            // 19. Change Phone Number
+            // Edit Phone & Street (Optional, but good for completeness)
             WebElement phone = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div/div[2]/div[3]/div/div[1]/div/div[3]/div/div/div/div[2]/div[2]/div/input"));
-            phone.sendKeys(Keys.CONTROL + "a");
-            phone.sendKeys(Keys.DELETE);
-            phone.sendKeys(currentPhone);
-
-            // 19 (Part 2). Change Street Name
+            phone.sendKeys(Keys.CONTROL + "a", Keys.DELETE, currentPhone);
+            
             WebElement street = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div/div[2]/div[3]/div/div[1]/div/div[4]/div/div/div[2]/div/div/div/div/div[2]/input"));
-            street.sendKeys(Keys.CONTROL + "a");
-            street.sendKeys(Keys.DELETE);
-            street.sendKeys(currentStreet);
+            street.sendKeys(Keys.CONTROL + "a", Keys.DELETE, currentStreet);
 
-            System.out.println("Edit Form Filled.");
-            Thread.sleep(1000);
-
-            // 20. Click Save
+            // Click Save
             driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div[2]/div/div[2]/div[3]/div/div[2]/div/div/span")).click();
-            System.out.println("Saved Edited Address.");
+            System.out.println("Clicked Save Edit.");
+            Thread.sleep(4000);
+
+            // === ASSERTION: Check Edited Name ===
+            // XPath provided: /html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div[1]/div[1]/div/div[1]/bdi
+            WebElement editedNameEl = driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div[1]/div[1]/div/div[1]/bdi"));
+            String displayedEditedName = editedNameEl.getText();
+            System.out.println("Displayed Name After Edit: " + displayedEditedName);
+
+            // Validation 1: Must NOT equal Old Name
+            Assertions.assertNotEquals(oldFullName, displayedEditedName, "FAILED: Name did not change!");
+            
+            // Validation 2: Must EQUAL New Name
+            Assertions.assertEquals(newFullName, displayedEditedName, "FAILED: Displayed name does not match the new input!");
+
+            System.out.println("Assertion Passed: Name updated correctly.");
 
         } catch (Exception e) {
-            Assertions.fail("Failed in Edit Address Step: " + e.getMessage());
+            Assertions.fail("Edit Address Failed: " + e.getMessage());
         }
     }
 
     // ---------------------------------------------------------
-    // STEP 21 - 25: Change Default & Delete
+    // STEP 3: Delete & Verify
     // ---------------------------------------------------------
     @Test
     @Order(3)
-    @DisplayName("Step 21-25: Set Default & Delete")
+    @DisplayName("Step 3: Delete Address")
     public void test03_SetDefaultAndDelete() {
-        System.out.println("=== TEST 3: Default & Delete ===");
+        System.out.println("=== TEST 3: Delete Address ===");
         try {
-            // 21. Wait 3 seconds
-            System.out.println("Waiting 3 seconds...");
-            Thread.sleep(3000);
-
-            // 22. Change default address by clicking the second address
-            // Note: Ensure there is a second address available
+            // Change Default (Optional - click second address)
             try {
                 driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div[2]/div[2]/div[1]/span")).click();
-                System.out.println("Changed Default Address.");
+                Thread.sleep(2000);
             } catch (Exception e) {
-                System.out.println("Failed to set default (Maybe only 1 address exists?): " + e.getMessage());
+                System.out.println("Skipping set default (Might be single address).");
             }
 
-            // 23. Wait 2 seconds
-            Thread.sleep(2000);
-
-            // 24. Delete address by clicking delete icon
+            // Click Delete (on targeted item)
             driver.findElement(By.xpath("/html/body/div[2]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div[2]/div[2]/div[2]/div[1]/div")).click();
-            System.out.println("Clicked Delete Button.");
+            Thread.sleep(1000);
 
-            Thread.sleep(1000); // Wait for confirmation modal
-
-            // 25. Confirm deletion
+            // Confirm Delete
             driver.findElement(By.xpath("/html/body/div[4]/div/div[2]/div[3]/div/div[2]/span[1]")).click();
             System.out.println("Confirmed Deletion.");
+            Thread.sleep(3000);
+            
+            // Simple validation: Ensure no crashes occurred. 
+            // Ideally we would check if list count decreased, but without list container XPath, 
+            // manual visual verification or previous assertions are primary.
 
         } catch (Exception e) {
-            Assertions.fail("Failed in Delete Step: " + e.getMessage());
+            Assertions.fail("Delete Failed: " + e.getMessage());
         }
     }
 
     @AfterAll
     public static void tearDown() {
         System.out.println("Address Test Completed.");
-        // driver.quit(); // Uncomment to close browser automatically
+        // driver.quit();
     }
 }
